@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(
 
-    page_title="Calculateur de moyenne",
+    page_title="Ma moyenne",
 
     page_icon="📚",
 
@@ -10,9 +10,75 @@ st.set_page_config(
 
 )
 
-st.title("📚 Calculateur de moyenne")
+# DESIGN VIOLET ET BLANC
 
-st.write("Personnalise tes coefficients et tes notes.")
+st.markdown("""
+
+<style>
+
+.stApp {
+
+    background: #f8f6ff;
+
+}
+
+h1, h2, h3 {
+
+    color: #6336b8 !important;
+
+}
+
+div[data-testid="stMetric"] {
+
+    background: white;
+
+    border: 2px solid #e6dcff;
+
+    padding: 18px;
+
+    border-radius: 16px;
+
+}
+
+div[data-testid="stMetricValue"] {
+
+    color: #713bd1;
+
+    font-weight: 800;
+
+}
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+
+    background: white;
+
+    border: 1px solid #e5d9ff;
+
+    border-radius: 16px;
+
+    padding: 12px;
+
+}
+
+.stButton button {
+
+    background: #713bd1;
+
+    color: white;
+
+    border-radius: 12px;
+
+}
+
+</style>
+
+""", unsafe_allow_html=True)
+
+# TITRE
+
+st.title("📚 Mon calculateur")
+
+st.caption("Suis ta moyenne en temps réel 💜")
 
 matieres = {
 
@@ -38,59 +104,95 @@ matieres = {
 
 }
 
+# Zone de moyenne affichée en haut
+
+zone_moyenne = st.empty()
+
 total_points = 0
 
 total_coef = 0
 
-st.subheader("Tes matières")
+st.subheader("📝 Mes matières")
 
 for i, (matiere, coef_initial) in enumerate(matieres.items()):
 
-    with st.expander(matiere, expanded=True):
+    with st.container(border=True):
 
-        coef = st.number_input(
+        st.markdown(f"### {matiere}")
 
-            "Coefficient",
+        col1, col2 = st.columns(2)
 
-            min_value=0.0,
+        with col1:
 
-            value=float(coef_initial),
+            coef = st.number_input(
 
-            step=1.0,
+                "Coefficient",
 
-            key=f"coef_{i}"
+                min_value=0.0,
 
-        )
+                value=float(coef_initial),
 
-        avec_td = st.checkbox(
+                step=1.0,
 
-            "Activer la note de TD (40 %)",
+                key=f"coef_{i}"
 
-            value=False,
+            )
 
-            key=f"td_{i}"
+        with col2:
 
-        )
+            avec_td = st.toggle(
 
-        examen = st.number_input(
+                "Activer le TD (40 %)",
 
-            "Note d'examen /20",
+                value=False,
 
-            min_value=0.0,
+                key=f"td_{i}"
 
-            max_value=20.0,
-
-            step=0.25,
-
-            key=f"exam_{i}"
-
-        )
+            )
 
         if avec_td:
 
-            td = st.number_input(
+            col1, col2 = st.columns(2)
 
-                "Note de TD /20",
+            with col1:
+
+                td = st.number_input(
+
+                    "Note TD /20",
+
+                    min_value=0.0,
+
+                    max_value=20.0,
+
+                    step=0.25,
+
+                    key=f"note_td_{i}"
+
+                )
+
+            with col2:
+
+                examen = st.number_input(
+
+                    "Note examen /20",
+
+                    min_value=0.0,
+
+                    max_value=20.0,
+
+                    step=0.25,
+
+                    key=f"exam_{i}"
+
+                )
+
+            note_finale = td * 0.4 + examen * 0.6
+
+        else:
+
+            examen = st.number_input(
+
+                "Note examen /20",
 
                 min_value=0.0,
 
@@ -98,42 +200,42 @@ for i, (matiere, coef_initial) in enumerate(matieres.items()):
 
                 step=0.25,
 
-                key=f"note_td_{i}"
+                key=f"exam_{i}"
 
             )
 
-            note_finale = td * 0.4 + examen * 0.6
-
-        else:
-
             note_finale = examen
 
-        st.caption(f"Note finale : {note_finale:.2f}/20")
+        st.caption(f"Note finale : **{note_finale:.2f}/20**")
 
         total_points += note_finale * coef
 
         total_coef += coef
 
-st.divider()
+# CALCUL AUTOMATIQUE
 
-if st.button("🧮 Calculer ma moyenne", use_container_width=True):
+with zone_moyenne.container():
+
+    st.metric(
+
+        "💜 MA MOYENNE GÉNÉRALE",
+
+        f"{total_points / total_coef:.2f}/20"
+
+        if total_coef > 0 else "0.00/20"
+
+    )
 
     if total_coef > 0:
 
         moyenne = total_points / total_coef
 
-        st.metric("Ta moyenne générale", f"{moyenne:.2f}/20")
-
         if moyenne >= 10:
 
             st.success("🎉 Tu as la moyenne !")
 
-            st.balloons()
-
         else:
 
-            st.warning("Il te reste des efforts à faire 💪")
+            st.info("Continue tes efforts 💪")
 
-    else:
-
-        st.error("Le total des coefficients doit être supérieur à zéro.")
+st.caption(f"Total des coefficients : {total_coef:g}")
