@@ -1,10 +1,18 @@
 import streamlit as st
 
-st.set_page_config(page_title="Calculateur de moyenne", page_icon="📚")
+st.set_page_config(
+
+    page_title="Calculateur de moyenne",
+
+    page_icon="📚",
+
+    layout="centered"
+
+)
 
 st.title("📚 Calculateur de moyenne")
 
-st.write("Entre tes notes pour calculer ta moyenne universitaire.")
+st.write("Personnalise tes coefficients et tes notes.")
 
 matieres = {
 
@@ -30,40 +38,102 @@ matieres = {
 
 }
 
-notes = {}
+total_points = 0
 
-for matiere, coef in matieres.items():
+total_coef = 0
 
-    notes[matiere] = st.number_input(
+st.subheader("Tes matières")
 
-        f"{matiere} (Coefficient {coef})",
+for i, (matiere, coef_initial) in enumerate(matieres.items()):
 
-        min_value=0.0,
+    with st.expander(matiere, expanded=True):
 
-        max_value=20.0,
+        coef = st.number_input(
 
-        value=0.0,
+            "Coefficient",
 
-        step=0.25,
+            min_value=0.0,
 
-        key=matiere
+            value=float(coef_initial),
 
-    )
+            step=1.0,
 
-if st.button("Calculer ma moyenne"):
+            key=f"coef_{i}"
 
-    total = sum(notes[m] * c for m, c in matieres.items())
+        )
 
-    moyenne = total / sum(matieres.values())
+        avec_td = st.checkbox(
 
-    st.success(f"Ta moyenne est : {moyenne:.2f}/20")
+            "Activer la note de TD (40 %)",
 
-    if moyenne >= 10:
+            value=False,
 
-        st.balloons()
+            key=f"td_{i}"
 
-        st.write("🎉 Félicitations ! Tu as la moyenne.")
+        )
+
+        examen = st.number_input(
+
+            "Note d'examen /20",
+
+            min_value=0.0,
+
+            max_value=20.0,
+
+            step=0.25,
+
+            key=f"exam_{i}"
+
+        )
+
+        if avec_td:
+
+            td = st.number_input(
+
+                "Note de TD /20",
+
+                min_value=0.0,
+
+                max_value=20.0,
+
+                step=0.25,
+
+                key=f"note_td_{i}"
+
+            )
+
+            note_finale = td * 0.4 + examen * 0.6
+
+        else:
+
+            note_finale = examen
+
+        st.caption(f"Note finale : {note_finale:.2f}/20")
+
+        total_points += note_finale * coef
+
+        total_coef += coef
+
+st.divider()
+
+if st.button("🧮 Calculer ma moyenne", use_container_width=True):
+
+    if total_coef > 0:
+
+        moyenne = total_points / total_coef
+
+        st.metric("Ta moyenne générale", f"{moyenne:.2f}/20")
+
+        if moyenne >= 10:
+
+            st.success("🎉 Tu as la moyenne !")
+
+            st.balloons()
+
+        else:
+
+            st.warning("Il te reste des efforts à faire 💪")
 
     else:
 
-        st.write("Continue tes efforts ! 💪")
+        st.error("Le total des coefficients doit être supérieur à zéro.")
